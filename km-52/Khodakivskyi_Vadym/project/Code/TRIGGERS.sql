@@ -9,7 +9,6 @@ BEGIN
         x
     FROM
         lection_theme;
-
     IF
         x < 4
     THEN
@@ -17,5 +16,8 @@ BEGIN
     END IF;
 END;
 
+
+
+    
 
 
