@@ -4,7 +4,8 @@ CREATE OR REPLACE PACKAGE information_package IS
     i_lec_name information.lection_name%TYPE,
     i_resourse information.resource_name%TYPE,
     i_link information.information_link%TYPE,
-    i_date information."Date"%TYPE );
+    i_date information."Date"%TYPE,
+    i_delete information.deleted%Type);
     TYPE tbl_information IS
         TABLE OF row_info;
     FUNCTION get_information (
@@ -21,7 +22,8 @@ CREATE OR REPLACE PACKAGE information_package IS
     )return VARCHAR2;
 
     PROCEDURE del_info (
-        i_nickname   IN information.nickname%TYPE
+        i_nickname   IN information.nickname%TYPE,
+        i_id   IN information.INFO_ID%TYPE
     );
 
 END information_package;
@@ -67,6 +69,7 @@ CREATE OR REPLACE PACKAGE BODY information_package IS
     )return VARCHAR2
         IS
         message VARCHAR2(30);
+        is_exist INTEGER:=0;
         nickname_ex EXCEPTION;
         theme_ex EXCEPTION;
         resourse_ex exception;
@@ -85,22 +88,30 @@ CREATE OR REPLACE PACKAGE BODY information_package IS
         if not REGEXP_LIKE(i_link,'^https:\/\/telegra\.ph\/[A-Za-z\-]+') then
                 raise link_ex;
         end if;
-        
-        INSERT INTO information (
-            info_id,
-            nickname,
-            lection_name,
-            resource_name,
-            information_link,
-            "Date"
-        ) VALUES (
-            info_id.nextval,
-            i_nickname,
-            i_lec_name,
-            i_resourse,
-            i_link,
-            SYSDATE
-        );
+        select count(*) into is_exist
+        from INFORMATION
+        where nickname=i_nickname and lection_name=i_lec_name and resource_name=i_resourse;
+        if is_exist = 0 then
+            INSERT INTO information (
+                info_id,
+                nickname,
+                lection_name,
+                resource_name,
+                information_link,
+                "Date"
+            ) VALUES (
+                info_id.nextval,
+                i_nickname,
+                i_lec_name,
+                i_resourse,
+                i_link,
+                SYSDATE
+            );
+        else 
+            UPDATE INFORMATION
+            set deleted = null, "Date" = SYSDATE
+            where nickname=i_nickname and lection_name=i_lec_name and resource_name=i_resourse;
+        end if;
 
         COMMIT;
         return message;
@@ -126,13 +137,14 @@ CREATE OR REPLACE PACKAGE BODY information_package IS
     END add_info;
 
     PROCEDURE del_info (
-        i_nickname   IN information.nickname%TYPE
+        i_nickname   IN information.nickname%TYPE,
+        i_id   IN information.INFO_ID%TYPE
     )
         IS
     BEGIN
-        DELETE FROM information
-        WHERE
-            information.nickname = i_nickname;
+        UPDATE INFORMATION
+        set deleted = current_timestamp
+        where nickname=i_nickname and INFO_ID=i_id;
             
     COMMIT;
 

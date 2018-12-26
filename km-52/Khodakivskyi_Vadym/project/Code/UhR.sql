@@ -1,23 +1,13 @@
 CREATE OR REPLACE PACKAGE uhr_package IS
-    TYPE row_uhr IS RECORD ( u_id user_has_resourses.user_resourse_id%TYPE,
-    u_nick user_has_resourses.author_nickname%TYPE,
-    u_resourse user_has_resourses.resource_name%TYPE,
-    u_date user_has_resourses."Date"%TYPE
-    );
-    TYPE tbl_uhr IS
-        TABLE OF row_uhr;
-    FUNCTION get_uhr (
-        u_nick   IN user_has_resourses.author_nickname%TYPE DEFAULT NULL
-    ) RETURN tbl_uhr
-        PIPELINED;
-
+    
     FUNCTION add_uhr (
         u_nick       IN user_has_resourses.author_nickname%TYPE,
         u_resourse   IN user_has_resourses.resource_name%TYPE
     ) RETURN VARCHAR2;
 
     PROCEDURE del_uhr (
-        u_resourse   IN user_has_resourses.resource_name%TYPE
+        u_resourse   IN user_has_resourses.resource_name%TYPE,
+        u_nick       IN user_has_resourses.author_nickname%TYPE
     );
 
     FUNCTION update_uhr (
@@ -29,36 +19,6 @@ END uhr_package;
 /
 
 CREATE OR REPLACE PACKAGE BODY uhr_package IS
-
-    FUNCTION get_uhr (
-        u_nick   IN user_has_resourses.author_nickname%TYPE DEFAULT NULL
-    ) RETURN tbl_uhr
-        PIPELINED
-    IS
-        TYPE uhr_cursor_type IS REF CURSOR;
-        uhr_cursor    uhr_cursor_type;
-        cursor_data   row_uhr;
-        query_str     VARCHAR2(1000);
-    BEGIN
-        query_str := 'SELECT * FROM USER_HAS_RESOURSES';
-        IF
-            u_nick IS NOT NULL
-        THEN
-            query_str := query_str
-            || ' where TRIM(AUTHOR_NICKNAME) = trim('''
-            || u_nick
-            || ''')';
-        END IF;
-
-        OPEN uhr_cursor FOR query_str;
-
-        LOOP
-            FETCH uhr_cursor INTO cursor_data;
-            EXIT WHEN ( uhr_cursor%notfound );
-            PIPE ROW ( cursor_data );
-        END LOOP;
-
-    END get_uhr;
 
     FUNCTION add_uhr (
         u_nick       IN user_has_resourses.author_nickname%TYPE,
@@ -91,12 +51,14 @@ CREATE OR REPLACE PACKAGE BODY uhr_package IS
     END add_uhr;
 
     PROCEDURE del_uhr (
-        u_resourse   IN user_has_resourses.resource_name%TYPE
+        u_resourse   IN user_has_resourses.resource_name%TYPE,
+        u_nick       IN user_has_resourses.author_nickname%TYPE
     )
         IS
     BEGIN
         DELETE FROM user_has_resourses WHERE
-            resource_name = u_resourse;
+            resource_name = u_resourse
+            and author_nickname=u_nick;
 
         COMMIT;
     END del_uhr;

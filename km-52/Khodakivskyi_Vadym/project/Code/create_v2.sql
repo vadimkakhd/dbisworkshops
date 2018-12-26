@@ -208,13 +208,13 @@ alter table RESOURSE
 alter table "User"
     add CONSTRAINT User_pass_check CHECK (REGEXP_LIKE(PASS,'[A-Za-z0-9]{6,16}'));
 alter table "User"
-    add CONSTRAINT User_name_check CHECK (REGEXP_LIKE(name,'^[A-Z]{1}[A-Za-z]+'));
+    add CONSTRAINT User_name_check CHECK (REGEXP_LIKE(Name,'^[A-Z][A-Za-z]+'));
 alter table "User"
-    add CONSTRAINT User_surname_check CHECK (REGEXP_LIKE(SURNAME,'^[A-Z]{1}[A-Za-z]+'));
+    add CONSTRAINT User_surname_check CHECK (REGEXP_LIKE(SURNAME,'^[A-Z][A-Za-z]+'));
 alter table "User"
     add CONSTRAINT User_nickname_check CHECK (REGEXP_LIKE(NICKNAME,'^[A-Za-z].*'));
 alter table "User"
-    add CONSTRAINT faculty_name_check CHECK (REGEXP_LIKE(FACULTY_NAME,'^[A-Z]{1}[A-Za-z]+(\s[A-Za-z]*)*'));
+    add CONSTRAINT faculty_name_check CHECK (REGEXP_LIKE(FACULTY_NAME,'^[A-Z][A-Za-z]+(\s[A-Za-z]*)*'));
 alter table "User"
     add CONSTRAINT course_number_check CHECK (course_number <= 6 and course_number > 0);
     
@@ -232,12 +232,12 @@ alter table INFORMATION
 alter table User_has_theme
    add constraint UhT_author_nickname_check CHECK (REGEXP_LIKE(Author_nickname,'^[A-Za-z].*'));
 alter table User_has_theme
-   add constraint User_has_theme_unique UNIQUE (Author_nickname, LECTION_NAME);
+   add constraint User_has_theme_unique UNIQUE (Author_nickname);
    
 alter table User_has_resourses
    add constraint UhR_author_check CHECK (REGEXP_LIKE(Author_nickname,'^[A-Za-z].*'));
 alter table User_has_resourses
-   add constraint User_has_resourses_unique UNIQUE (Author_nickname, RESOURCE_NAME);
+   add constraint User_has_resourses_unique UNIQUE (Author_nickname);
 
 
 

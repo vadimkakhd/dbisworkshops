@@ -1,22 +1,13 @@
 CREATE OR REPLACE PACKAGE uht_package IS
-    TYPE row_uht IS RECORD ( u_id user_has_theme.user_theme_id%TYPE,
-    u_nick user_has_theme.author_nickname%TYPE,
-    u_theme user_has_theme.lection_name%TYPE,
-    u_date user_has_theme."Date"%TYPE );
-    TYPE tbl_uht IS
-        TABLE OF row_uht;
-    FUNCTION get_uht (
-        u_nick   IN user_has_theme.author_nickname%TYPE DEFAULT NULL
-    ) RETURN tbl_uht
-        PIPELINED;
 
     FUNCTION add_uht (
         u_nick    IN user_has_theme.author_nickname%TYPE,
-        u_theme   IN user_has_theme."Date"%TYPE
+        u_theme   IN user_has_theme.lection_name%TYPE
     ) RETURN VARCHAR2;
 
     PROCEDURE del_uht (
-        u_theme   IN user_has_theme.lection_name%TYPE
+        u_theme   IN user_has_theme.lection_name%TYPE,
+        u_nick    IN user_has_theme.author_nickname%TYPE
     );
 
     FUNCTION update_uht (
@@ -29,39 +20,9 @@ END uht_package;
 
 CREATE OR REPLACE PACKAGE BODY uht_package IS
 
-    FUNCTION get_uht (
-        u_nick   IN user_has_theme.author_nickname%TYPE DEFAULT NULL
-    ) RETURN tbl_uht
-        PIPELINED
-    IS
-        TYPE uht_cursor_type IS REF CURSOR;
-        uht_cursor    uht_cursor_type;
-        cursor_data   row_uht;
-        query_str     VARCHAR2(1000);
-    BEGIN
-        query_str := 'SELECT * FROM USER_HAS_THEME';
-        IF
-            u_nick IS NOT NULL
-        THEN
-            query_str := query_str
-            || ' where TRIM(AUTHOR_NICKNAME) = trim('''
-            || u_nick
-            || ''')';
-        END IF;
-
-        OPEN uht_cursor FOR query_str;
-
-        LOOP
-            FETCH uht_cursor INTO cursor_data;
-            EXIT WHEN ( uht_cursor%notfound );
-            PIPE ROW ( cursor_data );
-        END LOOP;
-
-    END get_uht;
-
     FUNCTION add_uht (
         u_nick    IN user_has_theme.author_nickname%TYPE,
-        u_theme   IN user_has_theme."Date"%TYPE
+        u_theme   IN user_has_theme.lection_name%TYPE
     ) RETURN VARCHAR2 IS
         message   VARCHAR2(30);
     BEGIN
@@ -90,12 +51,14 @@ CREATE OR REPLACE PACKAGE BODY uht_package IS
     END add_uht;
 
     PROCEDURE del_uht (
-        u_theme   IN user_has_theme.lection_name%TYPE
+        u_theme   IN user_has_theme.lection_name%TYPE,
+        u_nick    IN user_has_theme.author_nickname%TYPE
     )
         IS
     BEGIN
         DELETE FROM user_has_theme WHERE
-            lection_name = u_theme;
+            lection_name = u_theme
+            and author_nickname=u_nick;
 
         COMMIT;
     END del_uht;
